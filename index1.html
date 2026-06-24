@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>duppi.xd — Poliakov Danila</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── TOKENS ─── */
+    :root {
+      --bg:      #F7F6F3;
+      --ink:     #111010;
+      --accent:  #C8FF3E;
+      --muted:   #888888;
+      --border:  #DDDBD6;
+      --card-bg: #EEECEA;
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-body:    'Inter', sans-serif;
+    }
+
+    /* ─── RESET ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    img, video { display: block; max-width: 100%; }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 2.5rem;
+      background: rgba(247,246,243,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    .nav-links a:hover { color: var(--ink); }
+
+    /* ─── HERO ─── */
+    .hero {
+      min-height: 100vh;
+      padding: 8rem 2.5rem 5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-eyebrow {
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.2rem;
+    }
+    .hero-name {
+      font-family: var(--font-display);
+      font-size: clamp(4.5rem, 14vw, 13rem);
+      font-weight: 700;
+      line-height: 0.9;
+      letter-spacing: -0.04em;
+      color: var(--ink);
+      /* clip the name so it bleeds edge to edge */
+      white-space: nowrap;
+    }
+    .hero-name span {
+      display: inline-block;
+      /* accent dot on the .xd part */
+    }
+    .hero-name .accent { color: var(--accent); }
+    .hero-sub {
+      margin-top: 2rem;
+      font-size: 0.95rem;
+      color: var(--muted);
+      max-width: 26rem;
+    }
+    /* ─── HERO CANVAS (JPEG sequence) ─── */
+    .hero-canvas-wrap {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .hero-canvas-wrap canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    /* Loading bar */
+    .seq-loader {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: rgba(0,0,0,0.08);
+      z-index: 5;
+    }
+    .seq-loader-bar {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+    /* Dim overlay so text stays legible */
+    .hero-canvas-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      /* subtle gradient: transparent at top-centre, slightly tinted at bottom */
+      background: linear-gradient(
+        to bottom,
+        rgba(247,246,243,0.08) 0%,
+        rgba(247,246,243,0.55) 100%
+      );
+      pointer-events: none;
+    }
+    /* Push text above canvas */
+    .hero > *:not(.hero-canvas-wrap) { position: relative; z-index: 2; }
+
+    /* Floating badge */
+    .hero-badge {
+      position: absolute;
+      top: 10rem;
+      right: 2.5rem;
+      width: 7rem; height: 7rem;
+      border-radius: 50%;
+      border: 1.5px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      text-align: center;
+      line-height: 1.4;
+      animation: spin 12s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    /* Scroll indicator */
+    .scroll-hint {
+      position: absolute;
+      bottom: 2.5rem; right: 2.5rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .scroll-hint::before {
+      content: '';
+      display: block;
+      width: 1.5rem;
+      height: 1px;
+      background: var(--muted);
+    }
+
+    /* ─── SHOWREEL ─── */
+    .reel-section {
+      padding: 0 2.5rem 7rem;
+    }
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* VIDEO EMBED — REPLACE src with your Vimeo / Kolodoscope link */
+    /*
+      HOW TO EMBED A VIDEO:
+      1. Vimeo: go to your video → Share → Embed → copy the iframe src
+         Example src: https://player.vimeo.com/video/YOUR_VIDEO_ID?autoplay=1&loop=1&muted=1
+      2. YouTube: share → embed → copy src (add ?autoplay=1&mute=1)
+      3. Replace the placeholder below with that <iframe> src
+    */
+    .reel-wrapper {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 */
+      border-radius: 0.75rem;
+      overflow: hidden;
+      background: #1a1a1a;
+      cursor: pointer;
+    }
+    .reel-wrapper iframe,
+    .reel-wrapper video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    /* Placeholder shown before embed is added */
+    .reel-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #181818;
+      color: #555;
+      gap: 1rem;
+    }
+    .reel-placeholder .play-btn {
+      width: 5rem; height: 5rem;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s;
+    }
+    .reel-placeholder .play-btn svg { margin-left: 4px; }
+    .reel-placeholder:hover .play-btn { transform: scale(1.08); }
+    .reel-placeholder p {
+      font-size: 0.8rem;
+      font-family: var(--font-display);
+      letter-spacing: 0.05em;
+    }
+
+    /* ─── ABOUT ─── */
+    .about-section {
+      padding: 7rem 2.5rem;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+    .about-photo {
+      position: relative;
+    }
+    /*
+      HOW TO REPLACE PHOTO:
+      Change the background-image URL below to your own image path or URL.
+      Example: url('photo.jpg')  or  url('https://your-cdn.com/danila.jpg')
+    */
+    .about-img {
+      width: 100%;
+      aspect-ratio: 4/5;
+      border-radius: 0.5rem;
+      background: var(--card-bg);
+      background-image: url('https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&q=80');
+      background-size: cover;
+      background-position: center;
+      /* REPLACE the URL above with your own photo */
+    }
+    .about-tag {
+      position: absolute;
+      bottom: -1.2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: var(--ink);
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.4rem 1.1rem;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .about-text h2 {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+    }
+    .about-text p {
+      color: #444;
+      font-size: 1rem;
+      line-height: 1.75;
+      margin-bottom: 1.2rem;
+      max-width: 36ch;
+    }
+    .skills-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 2rem;
+    }
+    .skill-tag {
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 0.3rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .skill-tag:hover { border-color: var(--ink); color: var(--ink); }
+
+    /* ─── WORKS ─── */
+    .works-section {
+      padding: 7rem 2.5rem;
+      border-top: 1px solid var(--border);
+    }
+    .works-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 3rem;
+    }
+    .works-header h2 {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+    .works-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 1.25rem;
+    }
+    /* Layout: first card wide, then smaller */
+    .work-card:nth-child(1) { grid-column: span 7; }
+    .work-card:nth-child(2) { grid-column: span 5; }
+    .work-card:nth-child(3) { grid-column: span 4; }
+    .work-card:nth-child(4) { grid-column: span 4; }
+    .work-card:nth-child(5) { grid-column: span 4; }
+
+    .work-card {
+      position: relative;
+      border-radius: 0.6rem;
+      overflow: hidden;
+      background: var(--card-bg);
+      cursor: pointer;
+      group: true;
+    }
+    /*
+      HOW TO ADD YOUR WORK IMAGES / VIDEOS:
+      Each .work-thumb has a background-image you can replace.
+      For VIDEO works: remove the <img> and add:
+        <iframe src="https://player.vimeo.com/video/YOUR_ID?autoplay=1&loop=1&muted=1"
+          style="position:absolute;inset:0;width:100%;height:100%;border:none;object-fit:cover;"
+          allow="autoplay"></iframe>
+      Or use a <video> tag with autoplay muted loop playsinline for self-hosted files.
+    */
+    .work-thumb {
+      width: 100%;
+      aspect-ratio: 16/10;
+      background: var(--card-bg);
+      background-size: cover;
+      background-position: center;
+      transition: transform 0.55s cubic-bezier(0.16,1,0.3,1);
+      position: relative;
+      overflow: hidden;
+    }
+    .work-card:nth-child(1) .work-thumb { aspect-ratio: 16/9; }
+    .work-card:nth-child(2) .work-thumb { aspect-ratio: 4/5; }
+    .work-card:nth-child(3) .work-thumb,
+    .work-card:nth-child(4) .work-thumb,
+    .work-card:nth-child(5) .work-thumb { aspect-ratio: 1/1; }
+
+    /* Placeholder gradient per card */
+    .work-card:nth-child(1) .work-thumb { background-color: #C9D0DD; }
+    .work-card:nth-child(2) .work-thumb { background-color: #D4C9CC; }
+    .work-card:nth-child(3) .work-thumb { background-color: #CDD4C9; }
+    .work-card:nth-child(4) .work-thumb { background-color: #D4D0C9; }
+    .work-card:nth-child(5) .work-thumb { background-color: #C9CDD4; }
+
+    .work-card:hover .work-thumb { transform: scale(1.035); }
+
+    /* Play icon on video works */
+    .work-play {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .work-card:hover .work-play { opacity: 1; }
+    .work-play-dot {
+      width: 2.8rem; height: 2.8rem;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .work-meta {
+      padding: 1rem 1rem 1.1rem;
+    }
+    .work-meta h3 {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .work-meta span {
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    /* TYPE badge */
+    .work-type {
+      position: absolute;
+      top: 0.75rem;
+      left: 0.75rem;
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.82);
+      color: var(--ink);
+      padding: 0.22rem 0.65rem;
+      border-radius: 999px;
+      backdrop-filter: blur(6px);
+    }
+
+    /* ─── CONTACT / FOOTER ─── */
+    footer {
+      padding: 7rem 2.5rem 4rem;
+      border-top: 1px solid var(--border);
+    }
+    .contact-big {
+      font-family: var(--font-display);
+      font-size: clamp(2.5rem, 7vw, 6rem);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 3rem;
+    }
+    .contact-big em {
+      font-style: normal;
+      color: var(--muted);
+    }
+    .contact-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    .contact-links {
+      display: flex;
+      gap: 1rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.4rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      font-family: var(--font-display);
+      letter-spacing: 0.02em;
+      border: 1.5px solid var(--ink);
+      transition: background 0.2s, color 0.2s;
+      cursor: pointer;
+    }
+    .btn:hover { background: var(--ink); color: var(--bg); }
+    .btn.accent { background: var(--accent); border-color: var(--accent); }
+    .btn.accent:hover { background: var(--ink); color: var(--bg); }
+
+    .footer-bottom {
+      margin-top: 4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* ─── DIVIDER ─── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 2.5rem;
+    }
+
+    /* ─── REDUCED MOTION ─── */
+    @media (prefers-reduced-motion: reduce) {
+      .hero-badge { animation: none; }
+      .work-card:hover .work-thumb { transform: none; }
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 900px) {
+      nav { padding: 1rem 1.5rem; }
+      .hero { padding: 7rem 1.5rem 4rem; }
+      .hero-badge { display: none; }
+      .reel-section { padding: 0 1.5rem 5rem; }
+      .about-section {
+        grid-template-columns: 1fr;
+        padding: 4rem 1.5rem;
+      }
+      .about-img { max-width: 18rem; }
+      .works-section { padding: 4rem 1.5rem; }
+      .works-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+      .work-card:nth-child(n) { grid-column: span 1; }
+      .work-card:nth-child(1) { grid-column: span 2; }
+      footer { padding: 4rem 1.5rem 3rem; }
+      .contact-row { flex-direction: column; align-items: flex-start; }
+    }
+
+    @media (max-width: 540px) {
+      .nav-links { display: none; }
+      .works-grid { grid-template-columns: 1fr; }
+      .work-card:nth-child(n) { grid-column: span 1; }
+    }
+
+    /* ─── SCROLL ANIMATIONS ─── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1),
+                  transform 0.7s cubic-bezier(0.16,1,0.3,1);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── NAV ─── -->
+  <nav>
+    <div class="nav-logo">duppi.xd</div>
+    <ul class="nav-links">
+      <li><a href="#reel">Reel</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#works">Works</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- ─── HERO ─── -->
+  <section class="hero">
+
+    <!--
+    ════════════════════════════════════════════════
+    JPEG SEQUENCE — КАК ПОДКЛЮЧИТЬ СВОИ КАДРЫ:
+
+    1. Назови файлы единообразно:
+         frame_001.jpg, frame_002.jpg, ... frame_120.jpg
+       (число цифр должно быть одинаковым, например 3)
+
+    2. Положи их рядом с index.html в папку:
+         sequence/frame_001.jpg
+         sequence/frame_002.jpg
+         ...
+
+    3. В скрипте ниже измени три переменные:
+         SEQ_FOLDER  — папка, например 'sequence'
+         SEQ_PREFIX  — префикс имени файла, например 'frame_'
+         SEQ_DIGITS  — сколько цифр (3 → 001, 4 → 0001)
+         SEQ_EXT     — расширение: 'jpg' или 'png'
+         SEQ_TOTAL   — сколько кадров всего
+         SEQ_FPS     — скорость воспроизведения (24 = кино, 30 = плавно)
+
+    4. Сохрани файл. Открой сайт — луп запустится автоматически.
+
+    Совет по оптимизации:
+       • Экспортируй кадры из C4D/Blender в разрешении 1920×1080
+       • Сожми JPEG на 70–80% качества (достаточно для экрана)
+       • ~60–120 кадров = 2–5 сек плавного лупа
+       • Для мощных машин можно 2–3× разрешение (2K/retina)
+    ════════════════════════════════════════════════
+    -->
+    <div class="hero-canvas-wrap" id="heroCanvasWrap">
+      <canvas id="heroCanvas"></canvas>
+      <div class="seq-loader"><div class="seq-loader-bar" id="seqLoaderBar"></div></div>
+    </div>
+
+    <div class="hero-eyebrow">3D · Motion · Photo · Video</div>
+    <h1 class="hero-name">
+      duppi<span class="accent">.xd</span>
+    </h1>
+    <p class="hero-sub">Poliakov Danila — motion designer &amp; visual storyteller</p>
+
+    <!-- Rotating badge -->
+    <div class="hero-badge" aria-hidden="true">3D&nbsp;Motion&nbsp;·&nbsp;Visual&nbsp;Design&nbsp;·&nbsp;Film&nbsp;·</div>
+
+    <div class="scroll-hint" aria-hidden="true">scroll</div>
+  </section>
+
+  <!-- ─── SHOWREEL ─── -->
+  <section class="reel-section" id="reel">
+    <div class="section-label">Showreel</div>
+
+    <div class="reel-wrapper">
+      <!--
+        ══════════════════════════════════════════
+        HOW TO EMBED YOUR SHOWREEL:
+
+        Option A — Vimeo (recommended):
+          1. Open your Vimeo video
+          2. Click Share → Embed
+          3. Copy the src URL (looks like: https://player.vimeo.com/video/1234567890)
+          4. Replace the comment below with:
+             <iframe src="https://player.vimeo.com/video/YOUR_ID?autoplay=1&loop=1&muted=1&background=1"
+               allow="autoplay; fullscreen" allowfullscreen></iframe>
+
+        Option B — YouTube:
+          <iframe src="https://www.youtube.com/embed/YOUR_VIDEO_ID?autoplay=1&mute=1&loop=1&playlist=YOUR_VIDEO_ID"
+            allow="autoplay; fullscreen" allowfullscreen></iframe>
+
+        Option C — Kolodoscope / direct file:
+          <video src="showreel.mp4" autoplay muted loop playsinline></video>
+
+        Remove the .reel-placeholder div once you've added the real embed.
+        ══════════════════════════════════════════
+      -->
+      <iframe src="https://kinescope.io/jUTD6Z7BSRiwajs6kzUt4E"
+  allow="autoplay; fullscreen" allowfullscreen></iframe>
+        <div class="play-btn">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M6 4l12 6-12 6V4z" fill="#111"/>
+          </svg>
+        </div>
+        <p>Paste your showreel embed here</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── ABOUT ─── -->
+  <section class="about-section reveal" id="about">
+    <div class="about-photo">
+      <!--
+        HOW TO REPLACE YOUR PHOTO:
+        Change the background-image in CSS (.about-img) to your own photo,
+        OR replace this div with: <img src="your-photo.jpg" alt="Poliakov Danila" class="about-img" />
+      -->
+      <div class="about-img" role="img" aria-label="Poliakov Danila"></div>
+      <div class="about-tag">Poliakov Danila</div>
+    </div>
+
+    <div class="about-text">
+      <h2>3D motion,<br>photo &amp; video.</h2>
+      <p>
+        I'm Danila — a motion designer based in [City].
+        I craft 3D animations, visual effects, and short films
+        that blend technical precision with a strong aesthetic point of view.
+      </p>
+      <p>
+        Available for freelance projects, studio collaborations,
+        and long-term creative partnerships.
+      </p>
+
+      <!-- SKILLS -->
+      <div class="skills-list">
+        <span class="skill-tag">Cinema 4D</span>
+        <span class="skill-tag">Houdini</span>
+        <span class="skill-tag">After Effects</span>
+        <span class="skill-tag">Blender</span>
+        <span class="skill-tag">Redshift</span>
+        <span class="skill-tag">DaVinci Resolve</span>
+        <span class="skill-tag">Photography</span>
+        <span class="skill-tag">Video direction</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── WORKS ─── -->
+  <section class="works-section reveal" id="works">
+    <div class="works-header">
+      <h2>Selected works</h2>
+    </div>
+
+    <div class="works-grid">
+
+      <!--
+        ══════════════════════════════════════════
+        HOW TO ADD YOUR WORK IMAGES OR VIDEOS:
+
+        For a STATIC IMAGE:
+          Replace the background-color on .work-thumb with:
+          background-image: url('your-image.jpg');
+          Or add <img src="your-image.jpg" alt="..." style="width:100%;height:100%;object-fit:cover;" />
+
+        For a VIDEO (Vimeo / self-hosted):
+          Remove the .work-thumb div and add:
+          <div style="position:relative;width:100%;aspect-ratio:16/10;overflow:hidden;">
+            <iframe src="https://player.vimeo.com/video/YOUR_ID?autoplay=1&loop=1&muted=1&background=1"
+              style="position:absolute;inset:0;width:100%;height:100%;border:none;"
+              allow="autoplay"></iframe>
+          </div>
+
+        Edit the title and description in .work-meta.
+        Change the .work-type badge text to "3D" / "Video" / "Photo".
+        ══════════════════════════════════════════
+      -->
+
+      <!-- CARD 1 — big left -->
+      <article class="work-card">
+        <div class="work-thumb">
+          <!-- Replace with: <img src="work-1.jpg" alt="Project name" style="width:100%;height:100%;object-fit:cover;"> -->
+          <div class="work-play">
+            <div class="work-play-dot">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M3 2l10 5-10 5V2z" fill="#111"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <span class="work-type">3D · Video</span>
+        <div class="work-meta">
+          <h3>Project Title One</h3>
+          <span>3D Motion — 2024</span>
+        </div>
+      </article>
+
+      <!-- CARD 2 -->
+      <article class="work-card">
+        <div class="work-thumb"></div>
+        <span class="work-type">Photo</span>
+        <div class="work-meta">
+          <h3>Project Title Two</h3>
+          <span>Photography — 2024</span>
+        </div>
+      </article>
+
+      <!-- CARD 3 -->
+      <article class="work-card">
+        <div class="work-thumb"></div>
+        <span class="work-type">3D</span>
+        <div class="work-meta">
+          <h3>Project Title Three</h3>
+          <span>3D Motion — 2025</span>
+        </div>
+      </article>
+
+      <!-- CARD 4 -->
+      <article class="work-card">
+        <div class="work-thumb"></div>
+        <span class="work-type">Video</span>
+        <div class="work-meta">
+          <h3>Project Title Four</h3>
+          <span>Video — 2025</span>
+        </div>
+      </article>
+
+      <!-- CARD 5 -->
+      <article class="work-card">
+        <div class="work-thumb"></div>
+        <span class="work-type">Photo</span>
+        <div class="work-meta">
+          <h3>Project Title Five</h3>
+          <span>Photography — 2025</span>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ─── FOOTER / CONTACT ─── -->
+  <footer id="contact">
+    <p class="contact-big reveal">
+      Let's work<br><em>together.</em>
+    </p>
+
+    <div class="contact-row reveal">
+      <a class="btn accent" href="mailto:danila.pollyakoff@gmail.com">
+        danila.pollyakoff@gmail.com
+      </a>
+      <div class="contact-links">
+        <!--
+          Replace # below with your actual Instagram and Behance URLs:
+          Instagram: hhttps://www.instagram.com/duppi.xd/
+          Behance:   https://www.behance.net/YOUR_HANDLE
+        -->
+        <a class="btn" href="https://www.instagram.com/duppi.xd/" target="_blank" rel="noopener">Instagram ↗</a>
+        <a class="btn" href="https://www.behance.net/4427dae3" target="_blank" rel="noopener">Behance ↗</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© 2026 duppi.xd — Poliakov Danila</span>
+      <span>3D · Motion · Photo · Video</span>
+    </div>
+  </footer>
+
+  <!-- ─── JPEG SEQUENCE PLAYER ─── -->
+  <script>
+  (function () {
+    /* ══ НАСТРОЙКИ — МЕНЯЙ ТОЛЬКО ЭТИ ПЕРЕМЕННЫЕ ══ */
+    const SEQ_FOLDER = 'sequence';   // папка с кадрами (рядом с index.html)
+    const SEQ_PREFIX = 'frame_';     // префикс имени: frame_001.jpg
+    const SEQ_DIGITS = 3;            // кол-во цифр: 3 → 001
+    const SEQ_EXT    = 'png';        // расширение файла
+    const SEQ_TOTAL  = 375;           // сколько кадров (измени под свою секвенцию)
+    const SEQ_FPS    = 25;           // скорость воспроизведения
+    /* ═══════════════════════════════════════════════ */
+
+    const canvas  = document.getElementById('heroCanvas');
+    const ctx     = canvas.getContext('2d');
+    const loaderBar = document.getElementById('seqLoaderBar');
+    const wrap    = document.getElementById('heroCanvasWrap');
+
+    // Подстраиваем canvas под реальные пиксели экрана
+    function resize() {
+      canvas.width  = wrap.offsetWidth  * (window.devicePixelRatio || 1);
+      canvas.height = wrap.offsetHeight * (window.devicePixelRatio || 1);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // Строим путь к кадру по номеру
+    function framePath(n) {
+      const num = String(n).padStart(SEQ_DIGITS, '0');
+      return `${SEQ_FOLDER}/${SEQ_PREFIX}${num}.${SEQ_EXT}`;
+    }
+
+    // Загружаем все кадры
+    const frames = [];
+    let loaded = 0;
+
+    function loadAll() {
+      for (let i = 1; i <= SEQ_TOTAL; i++) {
+        const img = new Image();
+        img.onload = () => {
+          loaded++;
+          loaderBar.style.width = (loaded / SEQ_TOTAL * 100) + '%';
+          if (loaded === SEQ_TOTAL) {
+            loaderBar.style.opacity = '0';
+            play();
+          }
+        };
+        img.onerror = () => {
+          // Кадр не найден — пропускаем, не ломаем луп
+          loaded++;
+          if (loaded === SEQ_TOTAL) play();
+        };
+        img.src = framePath(i);
+        frames[i - 1] = img;
+      }
+    }
+
+    // Рисуем кадр на canvas с cover-fit
+    function drawFrame(img) {
+      if (!img || !img.naturalWidth) return;
+      const cw = canvas.width, ch = canvas.height;
+      const iw = img.naturalWidth, ih = img.naturalHeight;
+      const scale = Math.max(cw / iw, ch / ih);
+      const sw = iw * scale, sh = ih * scale;
+      const ox = (cw - sw) / 2, oy = (ch - sh) / 2;
+      ctx.clearRect(0, 0, cw, ch);
+      ctx.drawImage(img, ox, oy, sw, sh);
+    }
+
+    // Луп
+    let currentFrame = 0;
+    let lastTime = 0;
+    const interval = 1000 / SEQ_FPS;
+
+    function play() {
+      function tick(ts) {
+        if (ts - lastTime >= interval) {
+          drawFrame(frames[currentFrame]);
+          currentFrame = (currentFrame + 1) % SEQ_TOTAL;
+          lastTime = ts;
+        }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // Пауза когда вкладка не видна — экономим CPU
+    document.addEventListener('visibilitychange', () => {
+      lastTime = performance.now(); // сбрасываем таймер при возврате
+    });
+
+    loadAll();
+  })();
+  </script>
+
+  <!-- ─── SCROLL REVEAL ─── -->
+  <script>
+    const observer = new IntersectionObserver(
+      (entries) => entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      }),
+      { threshold: 0.12 }
+    );
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>
